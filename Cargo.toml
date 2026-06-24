@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "contracts",
+    "tools/circom-to-soroban-hex",
+]
+resolver = "2"

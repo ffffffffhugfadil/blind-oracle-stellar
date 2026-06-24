@@ -1,0 +1,33 @@
+# Rust build artifacts
+target/
+contracts/target/
+*.d
+
+# Large binary files
+circuits/powersOfTau28_hez_final_10.ptau
+circuits/circuit_0000.zkey
+circuits/witness*.wtns
+
+# Backup files
+*.bak
+*.error
+*.backup
+contracts/src/*.bak
+contracts/src/*.error
+contracts/src/*.blind_oracle_backup
+
+# Node
+node_modules/
+circuits/node_modules/
+
+# Mac
+.DS_Store
+
+# Keys (jangan push secret)
+.secrets/
+
+# Temp scripts
+get-secret.mjs
+
+# Proving artifacts (bisa di-regenerate)
+circuits/circom/
