@@ -79,3 +79,17 @@ Network: Stellar Testnet (Protocol 26)
 
 - FAIL:  https://stellar.expert/explorer/testnet/tx/326994c65970d1e13091fab1eb43968b29e0b99105d4fc511f7d5b5d0d9eec53
 
+
+## Prediction Market Demo (Juni 2026)
+
+### Resource Usage (verify())
+- CPU Instructions : 33,176,348 / 100,000,000 (33.2%)
+- Min Resource Fee : 37,472 stroops = 0.0037472 XLM
+- Comparison       : 2x cheaper than Vouch (BLS12-381 ~61M instructions)
+
+### Markets Resolved On-Chain
+| Market | Question | Result | TX |
+|--------|----------|--------|----|
+| BTC-001 | BTC above $95,000? | YES | https://stellar.expert/explorer/testnet/tx/ |
+| BTC-002 | BTC above $95,000? | NO  | https://stellar.expert/explorer/testnet/tx/ |
+| ETH-001 | ETH $3,500-$5,000? | YES | https://stellar.expert/explorer/testnet/tx/ |

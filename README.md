@@ -1,381 +1,257 @@
-# 🔮 Blind Oracle
+#  Blind Oracle
 
-> **The first oracle where the contract is the last to know.**
+**Zero-Knowledge Range Proof Oracle on Stellar Soroban**
 
----
-
-## Introducing: Computation Privacy Oracles (CPO)
-
-The blockchain oracle space has solved one problem well: getting external data on-chain reliably. But every oracle design shares a fundamental assumption — that the contract *must* see the data to act on it.
-
-**Blind Oracle challenges that assumption.**
-
-Existing ZK systems solve *data privacy* — hiding who transferred what to whom. Blind Oracle introduces a different primitive:
-
-> **Computation Privacy Oracle (CPO)** — a smart contract that executes based on the *outcome* of a computation over data it never receives, cannot store, and cannot leak.
-
-In a CPO, the oracle's inputs are confidential not just from on-chain observers, but from the executing contract itself. The contract learns only one bit: *the computation was performed correctly, and the result is X.* It never learns what X was computed from.
-
-This is not a privacy feature added on top of an oracle. It is a fundamentally different architecture — one that makes an entire class of previously impossible applications possible on Stellar:
-
-**Applications impossible without CPO:**
-- A DeFi liquidation engine that triggers on price thresholds without an on-chain price feed that can be front-run
-- Parametric insurance that pays out based on sensor data without the insurer learning exact readings
-- Compliance checks that verify regulatory limits without exposing transaction amounts to the verifier
-- Blind auctions where losing bids are cryptographically guaranteed to never be revealed — not even to the auction contract
-
-**One circuit. One verifier. The contract never saw the data.**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Stellar Testnet](https://img.shields.io/badge/Network-Stellar%20Testnet-blue)](https://stellar.org)
-[![Circom](https://img.shields.io/badge/ZK-Circom%202.0-orange)](https://docs.circom.io)
-[![Built for](https://img.shields.io/badge/Built%20for-Stellar%20Hacks%20ZK%202026-purple)](https://stellar.org/hacks)
-
----
-
-## Why Blind Oracle Is Different From Every Other ZK Project on Stellar
-
-Most ZK projects prove **data privacy** — hiding who sent what to whom.  
-Blind Oracle proves **computation privacy** — a contract can act on the *outcome* of a computation without ever learning its *inputs*.
-
-This is a fundamentally different primitive. The contract does not learn the price, the sensor reading, or the transaction amount. It only learns: "the computation over that hidden data produced this result, and here is cryptographic proof."
-
-This unlocks applications that were previously impossible on Stellar:
-
-- DeFi protocols that trigger on price movements **without an on-chain price feed**
-- Parametric insurance that pays out **without revealing sensor data**
-- Compliance checks that verify regulatory limits **without exposing amounts**
-- Blind auctions where **losing bids are never revealed**
-
-**One circuit. One verifier. Unlimited private oracles.**
+Blind Oracle: any smart contract can now ask 'is this number in range?' — without ever seeing the number.
+Prove that private data is within a range — without revealing the data itself.
+Built for **Stellar Hacks: Real-World ZK**.
 
 ---
 
 ## The Problem
 
-Every oracle on-chain today has a fundamental flaw: **the data is visible**.
+Smart contracts need to make decisions based on private data — but publishing raw data on-chain destroys privacy.
 
-When a price feed, sports score, or API result is submitted to a smart contract, anyone can read it from the transaction — before execution, during execution, and forever after. This enables front-running, manipulation, and leaks confidential business logic.
+> *"Is BTC above $95,000 right now?"*
+> *"Is this user's credit score between 600 and 850?"*
+> *"Does this wallet hold enough collateral?"*
 
-## The Solution
+The naive answer (publish the number) is unacceptable. Blind Oracle solves this with zero-knowledge proofs.
 
-Blind Oracle introduces a new primitive: **contracts that react to information they never see**.
+---
 
-Instead of submitting raw data on-chain, a data provider runs the data through a ZK circuit off-chain. The circuit outputs:
-
-- A **commitment** — a cryptographic hash binding the provider to their data
-- A **result** — the boolean outcome (e.g. "price > threshold: true")
-- A **Groth16 proof** — cryptographic evidence the computation was done correctly
-
-The Soroban smart contract verifies the proof using BN254 host functions (Protocol 26), executes based on the result, and stores the commitment — **without ever learning the underlying data value or threshold**.
+## What Blind Oracle Does
 
 ```
-Raw Data (private) ──► Circom Circuit ──► [commitment, result, proof]
-                                                       │
-                                                       ▼
-                                          Soroban BN254 Verifier
-                                                       │
-                                          ┌────────────┴────────────┐
-                                          │  Verify proof           │
-                                          │  Execute on result      │
-                                          │  Store commitment       │
-                                          │  Never see raw data ✓   │
-                                          └─────────────────────────┘
+Private (stays with prover)       Public (on-chain)
+────────────────────────          ──────────────────────────
+price  = $97,500         ──ZK──▶  range: [$95,000 – $200,000]
+nonce  = secret                   in_range: true ✅
+                                  commitment: 0x8484...
+                                  nullifier:  0x2060...
+```
+
+One Groth16 proof. One Stellar transaction. Market resolves. Price never revealed.
+
+**Powered by:** Groth16 · BN254 · Circom 2.0 · Soroban · Poseidon
+
+---
+
+## Live Demo
+
+```bash
+export ALICE_SECRET="your-stellar-secret-key"
+
+# Interactive range proof demo
+bash demo.sh
+
+# Prediction market demo
+node --experimental-vm-modules prediction-market-demo.mjs
 ```
 
 ---
 
-## Live Testnet Deployment
+## Prediction Market Demo Results
 
-| Component | Value |
-|---|---|
-| Contract ID | `CDOQK7LSAPYXZ4VNP4HHZFNPW5PGVJYOUZXA7Z2ZBWTEEZHJ36HI7XOO` |
-| WASM Hash | `3532a0ca8e3c2e2cab064d3d80a10528bb2aa4b426f3d83e99f7d7c3305ff11e` |
-| Network | Stellar Testnet |
-| set_vk TX | [`36ffb5c5...`](https://stellar.expert/explorer/testnet/tx/36ffb5c581335dfbe56f6736f636143d35b0c86a53567f16dedadbd6e121599c) |
-| verify TX | [`47d9f8c9...`](https://stellar.expert/explorer/testnet/tx/47d9f8c970f0c0abe340e847a2d1b65dd94f0894d1a0699dfbc7660ec2bc4349) |
+All resolved on Stellar testnet — price never revealed:
 
-The contract verified a Groth16 proof on Stellar testnet. It confirmed `data_value > threshold` is TRUE — **without ever learning either value**.
+| Market | Question | Price | Range | Result | TX |
+|--------|----------|-------|-------|--------|----|
+| BTC-001 | BTC above $95k? | HIDDEN | $95k–$200k | YES ✅ | [view](https://stellar.expert/explorer/testnet/tx/1afe97625134615e9b975dda373793d2966d437cddca946885ee49455df8f920) |
+| BTC-002 | BTC above $95k? | HIDDEN | $95k–$200k | NO ❌ | [view](https://stellar.expert/explorer/testnet/tx/326994c65970d1e13091fab1eb43968b29e0b99105d4fc511f7d5b5d0d9eec53) |
+| ETH-001 | ETH between $3.5k–$5k? | HIDDEN | $3.5k–$5k | YES ✅ | [view](https://stellar.expert/explorer/testnet/tx/9ff58380f9725d46e9dd41c1e2661d5cb700d050828c45eea911f892b82e50d4) |
 
 ---
 
-## Three Use Cases, One Circuit
+## On-Chain Performance
 
-The same circuit and verifier contract handles any threshold comparison over any hidden data. No redeployment. No modification.
+| Metric | Value |
+|--------|-------|
+| CPU Instructions | **33,176,348 / 100,000,000 (33.2%)** |
+| Min Resource Fee | **37,472 stroops = 0.0037 XLM** |
+| Proof Size | **256 bytes** (constant) |
+| Curve | BN254 — 2× cheaper than BLS12-381 |
 
-### Use Case 1 — Prediction Market (DeFi)
-```
-Private: BTC price = $67,420 | threshold = $65,000
-Public:  commitment = Poseidon(67420, nonce) | result = 1 (TRUE)
-On-chain: contract pays "price above" bettors — never learns the price
-```
-
-### Use Case 2 — Parametric Insurance
-```
-Private: rainfall = 12mm | threshold = 25mm (minimum crop coverage)
-Public:  commitment = Poseidon(12, nonce) | result = 0 (FALSE = below minimum)
-On-chain: insurance payout triggered — insurer never learns exact rainfall
-```
-
-### Use Case 3 — Regulatory Compliance
-```
-Private: transaction amount = 4,999 USDC | threshold = 5,000 (reporting limit)
-Public:  commitment = Poseidon(4999, nonce) | result = 0 (FALSE = below limit)
-On-chain: compliance check passes — regulator never sees the amount
-```
-
-All three share identical circuit logic, identical verifier contract, identical on-chain footprint. The ZK proof is the only thing that changes.
+BN254 is natively supported by Soroban and runs at roughly half the instruction cost of BLS12-381, making Blind Oracle one of the most gas-efficient ZK verifiers on Stellar.
 
 ---
 
-## Security: Tamper Resistance
+## Deployed Contract
 
-A tampered or fabricated proof is **always rejected**. The BN254 pairing check in Soroban is the enforcement layer — there is no way to produce a valid proof for false inputs without breaking the discrete log assumption.
+| Network | Contract ID |
+|---------|-------------|
+| Stellar Testnet | `CBXMLDKAE45OIUEOODGFMKZMFE5SA3CSR7NXW7TILBUQBVHEGNCLDQVH` |
 
-```
-Valid proof   (100 > 50, correctly proven) → ✅ ACCEPTED
-Tampered proof (single bit flipped)        → ❌ REJECTED by contract
-Fake proof    (fabricated entirely)        → ❌ REJECTED by contract
-```
-
-This is demonstrated in `test_invalid.mjs` — run it to see both outcomes on-chain.
-
----
-
-## Replay Protection
-
-Every proof includes a `nonce` baked into the Poseidon commitment:
-
-```
-commitment = Poseidon(data_value, nonce)
-```
-
-The same data with a different nonce produces a different commitment, making every proof unique. The `verify_once` function in the contract additionally tracks used commitments in storage — submitting the same proof twice is rejected at the contract level, not just mathematically.
-
-This prevents an attacker from replaying a past valid proof to trigger a contract function a second time.
-
----
-
-## Architecture
-
-```
-blind-oracle-stellar/
-├── circuits/
-│   ├── blind_oracle.circom          # ZK circuit (Circom 2.0)
-│   ├── blind_oracle_js/             # Generated WASM prover
-│   ├── blind_oracle.r1cs            # R1CS constraint system
-│   ├── circuit_final.zkey           # Proving key (Groth16)
-│   ├── verification_key.json        # Verification key
-│   ├── convert.mjs                  # snarkjs → Soroban byte converter
-│   ├── submit_proof.mjs             # End-to-end submit script
-│   └── test_invalid.mjs             # Tamper resistance test
-│
-├── contracts/
-│   ├── src/
-│   │   ├── lib.rs                   # Soroban BN254 verifier contract
-│   │   └── test.rs                  # Unit tests
-│   └── Cargo.toml
-│
-└── README.md
-```
+[View on Stellar Expert →](https://stellar.expert/explorer/testnet/contract/CBXMLDKAE45OIUEOODGFMKZMFE5SA3CSR7NXW7TILBUQBVHEGNCLDQVH)
 
 ---
 
 ## How It Works
 
-### 1. The Circuit (`blind_oracle.circom`)
-
-```circom
-pragma circom 2.0.0;
-include "circomlib/circuits/poseidon.circom";
-include "circomlib/circuits/comparators.circom";
-
-template BlindOracle() {
-    // Private — never leaves the prover's machine
-    signal input data_value;
-    signal input threshold;
-    signal input nonce;
-
-    // Public — submitted on-chain with the proof
-    signal output commitment;   // Poseidon(data_value, nonce)
-    signal output result;       // 1 if data_value > threshold, else 0
-
-    component gt = GreaterThan(252);
-    gt.in[0] <== data_value;
-    gt.in[1] <== threshold;
-    result <== gt.out;
-
-    component poseidon = Poseidon(2);
-    poseidon.inputs[0] <== data_value;
-    poseidon.inputs[1] <== nonce;
-    commitment <== poseidon.out;
-}
-
-component main {public []} = BlindOracle();
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     PROVER (Off-Chain)                      │
+│                                                             │
+│  Private: data_value, nonce                                 │
+│  Public:  range_min, range_max  ← set by market maker       │
+│                                                             │
+│  [Circom Circuit] → [SnarkJS Groth16] → proof.bin (256B)    │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ submit
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  STELLAR SOROBAN (On-Chain)                  │
+│                                                             │
+│  verify(proof_bytes, pub_signals_bytes)                     │
+│    → BN254 pairing check (33.2M instructions)               │
+│    → return in_range: true / false                          │
+│                                                             │
+│  Market resolves. Price never stored anywhere.              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**496 constraints. 3 private inputs. 2 public outputs.**
+### Three Guarantees Per Proof
 
-Poseidon is used because it is ZK-friendly and natively supported as a host function in Stellar Protocol 25+, making it cheaper to verify on-chain than SHA-256.
-
-### 2. The Verifier Contract (`contracts/src/lib.rs`)
-
-A Soroban smart contract that:
-
-- Accepts a Groth16 proof + public signals (`commitment`, `result`)
-- Verifies using BN254 pairing checks — Stellar Protocol 26 host functions
-- Rejects any tampered or fabricated proof
-- Tracks used commitments to prevent replay attacks (`verify_once`)
-- Reverts if the proof is invalid — no result is ever recorded
-
-### 3. The Byte Converter (`circuits/convert.mjs`)
-
-snarkjs outputs G1/G2 coordinates as decimal strings. Soroban expects uncompressed affine points as big-endian byte arrays. The converter handles the translation:
-
-- G1 point: `[x, y]` → 64 bytes
-- G2 point: `[[x1,x0],[y1,y0]]` → 128 bytes (with correct field ordering)
-- Field elements: 32 bytes big-endian each
-
-This is the most critical piece of the pipeline — incorrect byte ordering causes pairing check to silently fail.
+| Guarantee | Mechanism |
+|-----------|-----------|
+| `range_min ≤ data_value ≤ range_max` | GreaterEqThan + LessEqThan (252-bit) |
+| `commitment = Poseidon(data_value, nonce)` | Binding — prover cannot change value after commit |
+| `nullifier = Poseidon(data_value, commitment)` | Replay protection — same data = same nullifier |
 
 ---
 
-## ZK Stack
+## Contract Interface
 
-| Component | Technology | Purpose |
-|---|---|---|
-| Circuit language | Circom 2.0 | Define computation constraints |
-| Proof system | Groth16 | Efficient proof + small on-chain footprint |
-| Hash function | Poseidon | ZK-friendly commitment (Stellar Protocol 25 native) |
-| Elliptic curve | BN254 | Pairing-based proof verification |
-| On-chain verifier | Soroban (Rust) | BN254 host functions (Protocol 26) |
-| Proof generation | snarkjs + WASM | Client-side, private inputs never leave device |
-| Blockchain | Stellar Testnet | Contract deployment + on-chain verification |
+```rust
+// One-time: store the Groth16 verification key
+set_vk(vk_bytes: Bytes) → Result<(), VerifierError>
+
+// Per proof: verify range membership
+verify(proof_bytes: Bytes, pub_signals_bytes: Bytes) → Result<bool, VerifierError>
+// Returns true  → proof valid AND data is within range
+// Returns false → proof valid but data is outside range
+// Returns Error → malformed input
+```
 
 ---
 
-## Getting Started
+## Use Cases
 
-### Prerequisites
+### Private Prediction Markets
+Price oracles prove a feed value is within a market's target range without ever publishing the exact price. Markets resolve trustlessly with no data leakage.
 
-```bash
-node >= 18
-npm >= 9
-rust (stable) + wasm32v1-none target
-circom 2.2.3
-stellar-cli >= 27.x
+### KYC / Identity
+Prove age ≥ 18, credit score in range, or accreditation status — without storing personal data on-chain.
+
+### DeFi Collateral
+Prove collateral exceeds a threshold for undercollateralized lending without exposing portfolio composition.
+
+### Compliance Oracles
+Prove transaction values stay within regulatory limits without revealing individual amounts to the protocol.
+
+---
+
+## ZK Circuit
+
+**File:** `circuits/blind_oracle_v2.circom`
+
+```
+Private inputs : data_value, nonce
+Public inputs  : range_min, range_max   ← verifier sets these
+Public outputs : commitment, in_range, nullifier
+
+Constraints    : 1,806
+Curve          : BN254
+Proof system   : Groth16
 ```
 
-### Installation
+The range bounds are **public inputs** — not hardcoded. One deployed circuit and one deployed contract serve any range, any asset, any use case.
+
+---
+
+## All Test Results
+
+| Scenario | Data | Range | Result | TX |
+|----------|------|-------|--------|----|
+| Credit Score | 750 | 600–850 | ✅ in_range | [view](https://stellar.expert/explorer/testnet/tx/29fe99529221411a0e049ca1f3b4421efd82d63719f2621a8082ce0f5cf1aa50) |
+| KYC Age | 25 | 18–65 | ✅ in_range | [view](https://stellar.expert/explorer/testnet/tx/4b6ac8381a02cdb9ae5be74871bdb5f182e7b346375b4ec27950400526f658d1) |
+| DeFi Collateral | 15,000 | 10k–50k | ✅ in_range | [view](https://stellar.expert/explorer/testnet/tx/9ff58380f9725d46e9dd41c1e2661d5cb700d050828c45eea911f892b82e50d4) |
+| Credit Score FAIL | 500 | 600–850 | ❌ out of range | [view](https://stellar.expert/explorer/testnet/tx/326994c65970d1e13091fab1eb43968b29e0b99105d4fc511f7d5b5d0d9eec53) |
+| BTC Market YES | HIDDEN | $95k–$200k | ✅ YES | [view](https://stellar.expert/explorer/testnet/tx/1afe97625134615e9b975dda373793d2966d437cddca946885ee49455df8f920) |
+| BTC Market NO | HIDDEN | $95k–$200k | ❌ NO | [view](https://stellar.expert/explorer/testnet/tx/326994c65970d1e13091fab1eb43968b29e0b99105d4fc511f7d5b5d0d9eec53) |
+| ETH Market YES | HIDDEN | $3.5k–$5k | ✅ YES | [view](https://stellar.expert/explorer/testnet/tx/9ff58380f9725d46e9dd41c1e2661d5cb700d050828c45eea911f892b82e50d4) |
+
+---
+
+## Quick Start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/blind-oracle-stellar
-cd blind-oracle-stellar
+# Install dependencies
 npm install
-cd circuits && npm install
-```
 
-### Compile the Circuit
+# 1. Create input
+cat > circuits/my_input.json << EOF
+{
+  "data_value": "97500",
+  "nonce": "314159",
+  "range_min": "95000",
+  "range_max": "200000"
+}
+EOF
 
-```bash
-cd circuits
-circom blind_oracle.circom --r1cs --wasm --sym -l node_modules
-```
+# 2. Generate witness
+node circuits/blind_oracle_v2_js/generate_witness.js \
+  circuits/blind_oracle_v2_js/blind_oracle_v2.wasm \
+  circuits/my_input.json \
+  circuits/my_witness.wtns
 
-Expected:
-```
-non-linear constraints: 496
-private inputs: 3 / public outputs: 2
-Everything went okay
-```
+# 3. Generate proof
+npx snarkjs groth16 prove \
+  circuits/circuit_v2_final.zkey \
+  circuits/my_witness.wtns \
+  circuits/my_proof.json \
+  circuits/my_public.json
 
-### Trusted Setup
-
-```bash
-curl -L https://hermez.s3-eu-west-1.amazonaws.com/powersOfTau28_hez_final_10.ptau \
-  -o powersOfTau28_hez_final_10.ptau
-
-npx snarkjs groth16 setup blind_oracle.r1cs powersOfTau28_hez_final_10.ptau circuit_0000.zkey
-npx snarkjs zkey contribute circuit_0000.zkey circuit_final.zkey --name="blind-oracle" -e="entropy"
-npx snarkjs zkey export verificationkey circuit_final.zkey verification_key.json
-```
-
-### Generate and Verify a Proof
-
-```bash
-# Prove: data_value=100 > threshold=50, without revealing either
-printf '{"data_value":"100","threshold":"50","nonce":"123456789"}' > input.json
-
-cd blind_oracle_js
-node generate_witness.js blind_oracle.wasm ../input.json ../witness.wtns
-cd ..
-
-npx snarkjs groth16 prove circuit_final.zkey witness.wtns proof.json public.json
-npx snarkjs groth16 verify verification_key.json public.json proof.json
-# → [INFO] snarkJS: OK!
-
-# Convert to Soroban byte format
-node convert.mjs
-```
-
-### Deploy and Submit On-Chain
-
-```bash
-# Deploy contract
-node deploy.mjs
-
-# Set verification key + submit proof
-node submit_proof.mjs
-
-# Test tamper resistance
-node test_invalid.mjs
+# 4. Encode + verify on-chain
+node encode-proof-v2.mjs
+export ALICE_SECRET="S..."
+node --experimental-vm-modules test-all-scenarios.mjs
 ```
 
 ---
 
-## Test Suite
+## Tech Stack
 
-```bash
-cd contracts
-cargo test
-
-# test test_set_vk_and_verify ... ok
-# test test_set_vk_validasi ... ok
-# test test_blind_oracle_public_signals_parsing ... ok
-# test test_blind_oracle_public_signals_invalid_result ... ok
-```
-
----
-
-## Security Properties
-
-| Property | Mechanism | Status |
-|---|---|---|
-| Data confidentiality | Private circuit inputs never submitted on-chain | ✅ |
-| Commitment binding | Poseidon(data_value, nonce) — collision resistant | ✅ |
-| Proof soundness | Groth16 — infeasible to fake without breaking DL | ✅ |
-| Tamper resistance | BN254 pairing check rejects any modified proof | ✅ |
-| Replay protection | Nonce in commitment + `verify_once` storage tracking | ✅ |
-| Front-running resistance | No raw data in mempool — nothing to front-run | ✅ |
-
-> This is a hackathon prototype. The trusted setup uses a single contribution and has not been audited. Do not use with real assets.
+| Layer | Technology |
+|-------|------------|
+| ZK Proof System | Groth16 (SnarkJS 0.7) |
+| ZK Circuit | Circom 2.0 + circomlib |
+| Elliptic Curve | BN254 (Barreto-Naehrig) |
+| Hash Function | Poseidon |
+| Smart Contract | Rust → WASM (Soroban SDK v22) |
+| Blockchain | Stellar Soroban Testnet |
+| SDK | @stellar/stellar-sdk v16 |
+| Trusted Setup | Powers of Tau (2^16) |
 
 ---
 
-## Resources
+## Documentation
 
-- [ZK Proofs on Stellar](https://developers.stellar.org/docs/build/apps/zk)
-- [Groth16 Verifier Reference](https://github.com/stellar/soroban-examples/tree/main/groth16_verifier)
-- [Stellar Protocol 26 (Yardstick)](https://stellar.org/blog/foundation-news/stellar-yardstick-protocol-26-upgrade-guide)
-- [BN254 Soroban SDK Docs](https://docs.rs/soroban-sdk/latest/soroban_sdk/_migrating/v25_bn254/index.html)
-- [Circom Documentation](https://docs.circom.io)
-- [Privacy Pools Whitepaper](https://privacypools.com/whitepaper.pdf)
+| File | Description |
+|------|-------------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, data flow, binary formats |
+| [WHITE_PAPER.md](./WHITE_PAPER.md) | Cryptographic construction, security analysis |
+| [GUIDE.md](./GUIDE.md) | Developer guide, troubleshooting |
+| [DEPLOYMENTS.md](./DEPLOYMENTS.md) | All deployments and TX hashes |
 
 ---
 
-## Team
+## Security Notes
 
-Built for [Stellar Hacks: Real-World ZK](https://stellar.org/hacks) — June 2026.
+- **Trusted Setup**: Single-contributor ceremony. Production requires multi-party MPC.
+- **Testnet Only**: Not audited for mainnet.
+- **Nullifier Registry**: On-chain nullifier tracking not yet implemented (replay protection is off-chain).
+- **Reserve Inputs**: ZK proves computation correctness, not input truthfulness.
 
 ---
 
