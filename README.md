@@ -1,6 +1,6 @@
 # 🔮 Blind Oracle
 
-> **A zero-knowledge oracle framework on Stellar — where smart contracts know the answer, but never see the data.**
+> **The first oracle where the contract is the last to know.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Stellar Testnet](https://img.shields.io/badge/Network-Stellar%20Testnet-blue)](https://stellar.org)
