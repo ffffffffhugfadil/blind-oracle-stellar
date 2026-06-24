@@ -45,10 +45,14 @@ Instead of submitting raw data on-chain, a data provider runs the data through a
 
 The Soroban smart contract verifies the proof using BN254 host functions (Protocol 26), executes based on the result, and stores the commitment — **without ever learning the underlying data value or threshold**.
 
-```
-[blind_oracle.pdf](https://github.com/user-attachments/files/29289219/blind_oracle.pdf)
 
-```
+<img width="941" height="482" alt="Screen Shot 2026-06-24 at 5 52 32 PM" src="https://github.com/user-attachments/assets/6baaf492-c711-4252-8acc-a3b7b37795fd" />
+
+
+
+
+
+
 
 ---
 
