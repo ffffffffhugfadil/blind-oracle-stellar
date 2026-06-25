@@ -100,7 +100,7 @@ BN254 is natively supported by Soroban and runs at roughly half the instruction 
                                │ submit
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  STELLAR SOROBAN (On-Chain)                  │
+│                  STELLAR SOROBAN (On-Chain)                 │
 │                                                             │
 │  verify(proof_bytes, pub_signals_bytes)                     │
 │    → BN254 pairing check (33.2M instructions)               │
