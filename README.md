@@ -1,11 +1,25 @@
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/112a5c69-1fb1-4b8d-b427-1c72be610194" 
+       alt="Banner" 
+       width="100%" 
+       style="max-width: 731px; display: block; margin: 0 auto;" />
+</p>
+
+
 #  Blind Oracle
 
 **Zero-Knowledge Range Proof Oracle on Stellar Soroban**
 
-Blind Oracle: any smart contract can now ask 'is this number in range?' — without ever seeing the number.
-Prove that private data is within a range — without revealing the data itself.
+Blind Oracle: any smart contract can now ask 'is this number in range?' without ever seeing the number.
+Prove that private data is within a range, without revealing the data itself.
 Built for **Stellar Hacks: Real-World ZK**.
 
+<table>
+  <tr>
+    <td><img width="545" height="846" alt="Screen Shot 1" src="https://github.com/user-attachments/assets/6de0722e-8bb8-4602-8c52-0059a3bb712e" /></td>
+    <td><img width="545" height="846" alt="Screen Shot 2" src="https://github.com/user-attachments/assets/0b1ff4ac-8de6-44d6-9053-87ae4e1d1816" /></td>
+  </tr>
+</table>
 ---
 
 ## The Problem
