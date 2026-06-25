@@ -2,6 +2,30 @@
 
 > **The first oracle where the contract is the last to know.**
 
+---
+
+## Introducing: Computation Privacy Oracles (CPO)
+
+The blockchain oracle space has solved one problem well: getting external data on-chain reliably. But every oracle design shares a fundamental assumption — that the contract *must* see the data to act on it.
+
+**Blind Oracle challenges that assumption.**
+
+Existing ZK systems solve *data privacy* — hiding who transferred what to whom. Blind Oracle introduces a different primitive:
+
+> **Computation Privacy Oracle (CPO)** — a smart contract that executes based on the *outcome* of a computation over data it never receives, cannot store, and cannot leak.
+
+In a CPO, the oracle's inputs are confidential not just from on-chain observers, but from the executing contract itself. The contract learns only one bit: *the computation was performed correctly, and the result is X.* It never learns what X was computed from.
+
+This is not a privacy feature added on top of an oracle. It is a fundamentally different architecture — one that makes an entire class of previously impossible applications possible on Stellar:
+
+**Applications impossible without CPO:**
+- A DeFi liquidation engine that triggers on price thresholds without an on-chain price feed that can be front-run
+- Parametric insurance that pays out based on sensor data without the insurer learning exact readings
+- Compliance checks that verify regulatory limits without exposing transaction amounts to the verifier
+- Blind auctions where losing bids are cryptographically guaranteed to never be revealed — not even to the auction contract
+
+**One circuit. One verifier. The contract never saw the data.**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Stellar Testnet](https://img.shields.io/badge/Network-Stellar%20Testnet-blue)](https://stellar.org)
 [![Circom](https://img.shields.io/badge/ZK-Circom%202.0-orange)](https://docs.circom.io)
@@ -45,14 +69,19 @@ Instead of submitting raw data on-chain, a data provider runs the data through a
 
 The Soroban smart contract verifies the proof using BN254 host functions (Protocol 26), executes based on the result, and stores the commitment — **without ever learning the underlying data value or threshold**.
 
-
-<img width="941" height="482" alt="Screen Shot 2026-06-24 at 5 52 32 PM" src="https://github.com/user-attachments/assets/6baaf492-c711-4252-8acc-a3b7b37795fd" />
-
-
-
-
-
-
+```
+Raw Data (private) ──► Circom Circuit ──► [commitment, result, proof]
+                                                       │
+                                                       ▼
+                                          Soroban BN254 Verifier
+                                                       │
+                                          ┌────────────┴────────────┐
+                                          │  Verify proof           │
+                                          │  Execute on result      │
+                                          │  Store commitment       │
+                                          │  Never see raw data ✓   │
+                                          └─────────────────────────┘
+```
 
 ---
 

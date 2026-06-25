@@ -13,3 +13,69 @@ One circuit. One verifier contract. Four different use cases. The contract never
 Contract ID: `CDOQK7LSAPYXZ4VNP4HHZFNPW5PGVJYOUZXA7Z2ZBWTEEZHJ36HI7XOO`  
 WASM Hash: `3532a0ca8e3c2e2cab064d3d80a10528bb2aa4b426f3d83e99f7d7c3305ff11e`  
 Network: Stellar Testnet (Protocol 26)
+
+## Contract V3 — Public Range Proof (Juni 2026)
+
+### Contract
+- **Contract ID:** CBXMLDKAE45OIUEOODGFMKZMFE5SA3CSR7NXW7TILBUQBVHEGNCLDQVH
+- **WASM hash:** 5a7797bc704c678fb24fd28df231d7f5b96d0c55f6a11dca3ce804e8cb40944a
+- **Circuit:** blind_oracle_v2.circom (1806 constraints)
+- **Public signals:** commitment, in_range, nullifier, range_min, range_max
+
+### Upgrade dari V2
+- range_min & range_max jadi PUBLIC input (verifier set range)
+- Contract enforce in_range on-chain (return false jika di luar range)
+- Constraint range_min <= range_max di circuit
+
+### Test Results
+| Skenario | Data | Range | Result |
+|---|---|---|---|
+| KYC Age | 25 | 18-65 | in_range=true |
+| DeFi Collateral | 15000 | 10000-50000 | in_range=true |
+| Credit Score FAIL | 500 | 600-850 | in_range=false |
+
+### Transactions
+- KYC:   https://stellar.expert/explorer/testnet/tx/4b6ac8381a02cdb9ae5be74871bdb5f182e7b346375b4ec27950400526f658d1
+- DeFi:  https://stellar.expert/explorer/testnet/tx/9ff58380f9725d46e9dd41c1e2661d5cb700d050828c45eea911f892b82e50d4
+- FAIL:  https://stellar.expert/explorer/testnet/tx/326994c65970d1e13091fab1eb43968b29e0b99105d4fc511f7d5b5d0d9eec53
+
+## Contract V3 — Public Range Proof (Juni 2026)
+
+### Contract
+
+- **Contract ID:** CBXMLDKAE45OIUEOODGFMKZMFE5SA3CSR7NXW7TILBUQBVHEGNCLDQVH
+
+- **WASM hash:** 5a7797bc704c678fb24fd28df231d7f5b96d0c55f6a11dca3ce804e8cb40944a
+
+- **Circuit:** blind_oracle_v2.circom (1806 constraints)
+
+- **Public signals:** commitment, in_range, nullifier, range_min, range_max
+
+### Upgrade from V2
+
+- range_min & range_max jadi PUBLIC input (verifier set range)
+
+- Contract enforce in_range on-chain (return false jika di luar range)
+
+- Constraint range_min <= range_max di circuit
+
+### Test Results
+
+| Skenario | Data | Range | Result |
+
+|---|---|---|---|
+
+| KYC Age | 25 | 18-65 | in_range=true |
+
+| DeFi Collateral | 15000 | 10000-50000 | in_range=true |
+
+| Credit Score FAIL | 500 | 600-850 | in_range=false |
+
+### Transactions
+
+- KYC:   https://stellar.expert/explorer/testnet/tx/4b6ac8381a02cdb9ae5be74871bdb5f182e7b346375b4ec27950400526f658d1
+
+- DeFi:  https://stellar.expert/explorer/testnet/tx/9ff58380f9725d46e9dd41c1e2661d5cb700d050828c45eea911f892b82e50d4
+
+- FAIL:  https://stellar.expert/explorer/testnet/tx/326994c65970d1e13091fab1eb43968b29e0b99105d4fc511f7d5b5d0d9eec53
+

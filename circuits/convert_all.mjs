@@ -30,10 +30,15 @@ function convertProof(proofFile, pubFile, outPrefix) {
   const pubBuf = Buffer.concat([sigCount, ...pub.map(s => fieldToBytes32(s))]);
   writeFileSync(outPrefix + "_public.hex", pubBuf.toString("hex"));
 
-  console.log(outPrefix + " → proof=" + proofBuf.length + "B  public=" + pubBuf.length + "B  result=" + pub[1]);
+  const labels = ["commitment","result","in_range","nullifier"];
+  process.stdout.write(outPrefix + ": proof=" + proofBuf.length + "B  public=" + pubBuf.length + "B\n");
+  pub.forEach((v, i) => {
+    process.stdout.write("  [" + labels[i] + "] = " + v.slice(0,16) + "...\n");
+  });
 }
 
+convertProof("proof.json",            "public.json",            "proof_correct");
 convertProof("proof_insurance.json",  "public_insurance.json",  "insurance");
 convertProof("proof_compliance.json", "public_compliance.json", "compliance");
 convertProof("proof_defi.json",       "public_defi.json",       "defi");
-console.log("Done — 3 proofs converted");
+process.stdout.write("Done\n");

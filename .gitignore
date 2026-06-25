@@ -1,17 +1,24 @@
-# Rust build artifacts
+# Rust
 target/
 contracts/target/
 *.d
 
-# Large binary files
+# Large ptau files
 circuits/powersOfTau28_hez_final_10.ptau
+circuits/powersOfTau28_hez_final_16.ptau
+
+# Intermediate zkeys (hanya keep final)
 circuits/circuit_0000.zkey
-circuits/witness*.wtns
+circuits/circuit_0000_v2.zkey
+circuits/circuit_v2_0000.zkey
+
+# Witness files (regenerable)
+circuits/*.wtns
 
 # Backup files
 *.bak
 *.error
-*.backup
+*.blind_oracle_backup
 contracts/src/*.bak
 contracts/src/*.error
 contracts/src/*.blind_oracle_backup
@@ -22,12 +29,13 @@ circuits/node_modules/
 
 # Mac
 .DS_Store
+**/.DS_Store
 
-# Keys (jangan push secret)
-.secrets/
-
-# Temp scripts
+# Secret
 get-secret.mjs
 
-# Proving artifacts (bisa di-regenerate)
+# Circom source build
 circuits/circom/
+
+# Auxiliary test data (bukan bagian proyek utama)
+contracts/data/auxiliary/
